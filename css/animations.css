@@ -1,0 +1,250 @@
+/* ==========================================================================
+   LUXURY DIGITAL MENU - ANIMATIONS LIBRARY
+   ========================================================================== */
+
+/* --- Keyframes --- */
+
+/* Fade Up Reveal */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Fade Left Reveal */
+@keyframes fadeLeft {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Fade Right Reveal */
+@keyframes fadeRight {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Zoom In Reveal */
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Luxury Card Gold Glow */
+@keyframes cardGlow {
+  0% {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  }
+  100% {
+    box-shadow: 0 20px 40px rgba(212, 175, 55, 0.15), 0 0 1px rgba(212, 175, 55, 0.4);
+  }
+}
+
+/* Luxury Card Glow (Dark Theme) */
+@keyframes cardGlowDark {
+  0% {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+  100% {
+    box-shadow: 0 20px 40px rgba(212, 175, 55, 0.25), 0 0 1px rgba(212, 175, 55, 0.6);
+  }
+}
+
+/* Slow Floating Bounce */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Elegant Shimmer for Loader and Special Badges */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Pulsing Scroll Indicator */
+@keyframes pulseScroll {
+  0% {
+    opacity: 0.3;
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(8px) scale(1.1);
+  }
+  100% {
+    opacity: 0.3;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Smooth Spinner for Preloader */
+@keyframes rotateGold {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Animation Classes --- */
+
+/* Scroll-based reveal classes (applied dynamically via JS) */
+.reveal {
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+}
+
+.reveal-fade-up {
+  transform: translateY(35px);
+}
+.reveal-fade-up.active {
+  transform: translateY(0);
+}
+
+.reveal-fade-left {
+  transform: translateX(40px);
+}
+.reveal-fade-left.active {
+  transform: translateX(0);
+}
+
+.reveal-fade-right {
+  transform: translateX(-40px);
+}
+.reveal-fade-right.active {
+  transform: translateX(0);
+}
+
+.reveal-zoom-in {
+  transform: scale(0.95);
+}
+.reveal-zoom-in.active {
+  transform: scale(1);
+}
+
+/* Floating badge animation */
+.float-effect {
+  animation: float 4s ease-in-out infinite;
+}
+
+/* Shimmer overlay for loaders */
+.shimmer-effect {
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.1) 25%, rgba(212, 175, 55, 0.3) 50%, rgba(212, 175, 55, 0.1) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Button ripple placeholder */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  animation: rippleEffect 0.6s linear;
+  pointer-events: none;
+}
+
+@keyframes rippleEffect {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* --- Hover transitions --- */
+
+/* Subtle image scale */
+.hover-zoom-img {
+  transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.hover-zoom-img:hover {
+  transform: scale(1.08);
+}
+
+/* Lift and Glow for Menu Cards */
+.menu-card-hover {
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), 
+              box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+              border-color 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+[theme="light"] .menu-card-hover:hover {
+  transform: translateY(-8px);
+  animation: cardGlow 0.4s forwards;
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+[theme="dark"] .menu-card-hover:hover {
+  transform: translateY(-8px);
+  animation: cardGlowDark 0.4s forwards;
+  border-color: rgba(212, 175, 55, 0.5);
+}
+
+/* Golden button shine effect */
+.btn-gold-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gold-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  transition: 0.75s;
+  opacity: 0;
+}
+
+.btn-gold-shine:hover::after {
+  opacity: 1;
+  left: 125%;
+}
