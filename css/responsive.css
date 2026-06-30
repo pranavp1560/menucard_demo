@@ -1,5 +1,5 @@
 /* ==========================================================================
-   LUXURY DIGITAL MENU - RESPONSIVE MEDIA QUERIES
+   LUXURY DIGITAL MENU - RESPONSIVE MEDIA QUERIES (BISTRO REDESIGN)
    ========================================================================== */
 
 /* --- Medium Desktop & Laptops (Max 1200px) --- */
@@ -10,6 +10,12 @@
   header.scrolled .navbar {
     padding: 15px 4%;
   }
+  .split-bg-left {
+    width: 50%;
+  }
+  .split-bg-right {
+    width: 50%;
+  }
   .gallery-grid {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -19,6 +25,13 @@
 @media screen and (max-width: 1024px) {
   html {
     font-size: 15px;
+  }
+  
+  .split-bg-left {
+    width: 60%;
+  }
+  .split-bg-right {
+    width: 40%;
   }
   
   .hero-title {
@@ -110,14 +123,35 @@
     visibility: visible;
   }
   
+  /* Disable split background layout on mobile */
+  .split-bg-left {
+    width: 100%;
+  }
+  .split-bg-right {
+    display: none;
+  }
+  .split-bg-container::after {
+    background: var(--bg-primary);
+  }
+  
   /* Category Sticky Top Adjustment */
   .category-nav-wrapper {
     top: 88px;
     padding: 12px 0;
+    width: 100%;
   }
   
   header.scrolled + main .category-nav-wrapper {
     top: 68px;
+  }
+  
+  .category-capsule-container {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 6px 0;
   }
   
   .category-nav {
@@ -153,10 +187,67 @@
     height: 65px;
   }
   
-  /* Menu Layout */
-  .menu-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 20px;
+  /* Mobile Menu List Row Override */
+  .menu-row {
+    padding: 15px 5px;
+    gap: 15px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  
+  .row-left {
+    width: calc(100% - 110px);
+    flex-grow: 1;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .img-circle-frame {
+    width: 58px;
+    height: 58px;
+  }
+  
+  .row-details {
+    padding-bottom: 25px; /* Leave space for absolute price */
+  }
+  
+  .dish-name {
+    font-size: 1.1rem;
+  }
+  
+  .row-center {
+    position: absolute;
+    bottom: 12px;
+    left: 97px; /* Align with details start: 58px image + 24px gap + border adjustment */
+    width: auto;
+    min-width: auto;
+    text-align: left;
+  }
+  
+  .row-right {
+    width: 95px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    margin-left: auto;
+  }
+  
+  .btn-add-order {
+    padding: 8px 14px;
+    font-size: 0.65rem;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .row-action-buttons {
+    gap: 6px;
+  }
+  
+  .card-action-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
   }
   
   .category-header h2 {
@@ -220,6 +311,18 @@
 
 /* --- Small Mobile Phones (Max 480px) --- */
 @media screen and (max-width: 480px) {
+  /* Cart Drawer Full Screen */
+  .cart-drawer {
+    width: 100%;
+    right: -100%;
+  }
+  .cart-drawer.active {
+    right: 0;
+  }
+  .cart-drawer-content {
+    padding: 20px;
+  }
+  
   .gallery-grid {
     grid-template-columns: 1fr;
   }
@@ -272,21 +375,30 @@
     font-size: 2.1rem;
   }
   
-  .menu-grid {
-    grid-template-columns: 1fr;
+  .row-left {
+    width: 100%;
   }
   
-  .card-header-row {
-    flex-direction: column;
-    gap: 5px;
+  .row-right {
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
   }
   
-  .dish-price {
-    text-align: left;
+  .row-center {
+    position: static;
+    margin-top: 5px;
+    font-size: 1.15rem;
   }
   
-  .modal-right {
-    padding: 15px;
+  .row-details {
+    padding-bottom: 5px;
+  }
+  
+  .btn-add-order {
+    width: auto;
   }
 }
 
