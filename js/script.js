@@ -1,5 +1,5 @@
 /* ==========================================================================
-   LUXURY DIGITAL MENU - CORE LOGIC & INTERACTION
+   LUXURY DIGITAL MENU - CORE LOGIC & INTERACTION (BISTRO REDESIGN)
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const categoryTabs = document.querySelectorAll('.category-tab');
   const filterBtns = document.querySelectorAll('.filter-btn');
   const searchInput = document.getElementById('menuSearch');
-  const foodCards = document.querySelectorAll('.food-card');
+  const foodCards = document.querySelectorAll('.food-card'); // menu rows act as foodCards
   const categoryGroups = document.querySelectorAll('.category-group');
   const noResultsDiv = document.querySelector('.no-results');
   
@@ -23,6 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalCloseBtn = document.querySelector('.modal-close-btn');
   const modalBackdrop = document.querySelector('.modal-backdrop');
   
+  // Cart Drawer Elements
+  const cartDrawer = document.getElementById('cartDrawer');
+  const cartToggleBtn = document.querySelector('.cart-toggle-btn');
+  const cartCloseBtn = document.querySelector('.cart-close-btn');
+  const cartBackdrop = document.querySelector('.cart-drawer-backdrop');
+  const cartItemsList = document.querySelector('.cart-items-list');
+  const cartSubtotalPrice = document.querySelector('.cart-subtotal-price');
+  const btnCheckoutWhatsapp = document.querySelector('.btn-checkout-whatsapp');
+  const cartCountBadge = document.querySelector('.cart-count');
+  const btnModalAddToCart = document.querySelector('.btn-modal-add-to-cart');
+
   // Lightbox Elements
   const lightbox = document.getElementById('lightbox');
   const lightboxImg = document.querySelector('.lightbox-img');
@@ -35,6 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // WhatsApp Order Config
   const WHATSAPP_PHONE = '919876543210'; // Customizable phone number with country code
   
+  // --- Cart State ---
+  let cart = JSON.parse(localStorage.getItem('luxury-menu-cart')) || [];
+  let currentlySelectedModalId = null; // Track item currently open in modal
+
   // --- 1. Preloader dismissal ---
   window.addEventListener('load', () => {
     setTimeout(() => {
@@ -186,8 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }, {
-    threshold: 0.25,
-    rootMargin: '-10% 0px -60% 0px'
+    threshold: 0.2,
+    rootMargin: '-15% 0px -55% 0px'
   });
 
   categoryGroups.forEach(group => activeCategoryObserver.observe(group));
@@ -203,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetEl) {
         let offset = 140; // Default gap for header
         if (this.classList.contains('category-tab')) {
-          offset = 150;
+          offset = 160;
         }
         
         const targetPos = targetEl.getBoundingClientRect().top + window.scrollY - offset;
@@ -288,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = card.getAttribute('data-type'); // veg or nonveg
         const isPopular = card.getAttribute('data-popular') === 'true';
         const isChef = card.getAttribute('data-chef') === 'true';
-        const cardId = card.getAttribute('data-id');
 
         // Check search match
         const searchMatches = 
@@ -359,11 +373,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- 11. Food Details Modal (Interactive Menu Dialog) ---
   const openModal = (card) => {
+    const id = card.getAttribute('data-id');
+    currentlySelectedModalId = id; // Track target ID for add-to-cart inside modal
+    
     const name = card.getAttribute('data-name');
     const price = card.getAttribute('data-price');
     const category = card.getAttribute('data-category');
     const desc = card.getAttribute('data-desc');
-    const imgUrl = card.querySelector('.card-img').src;
+    const imgUrl = card.querySelector('.row-circle-img').src;
     const type = card.getAttribute('data-type');
     const prep = card.getAttribute('data-prep') || '15-20 mins';
     const calories = card.getAttribute('data-calories') || 'Approx. 350 kcal';
@@ -411,12 +428,6 @@ document.addEventListener('DOMContentLoaded', () => {
       badgeContainer.appendChild(popBadge);
     }
 
-    // Dynamic WhatsApp Pre-filled Order Link
-    const waButton = document.querySelector('.btn-whatsapp-order');
-    const message = `Hello! I would like to order the following from your digital menu:\n\n*1x ${name}* (₹${price})\n\nPlease confirm availability. Thank you!`;
-    const encodedMsg = encodeURIComponent(message);
-    waButton.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encodedMsg}`;
-
     // Open Modal UI
     detailModal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -424,14 +435,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const closeModal = () => {
     detailModal.classList.remove('active');
-    document.body.style.overflow = '';
+    if (!cartDrawer.classList.contains('active')) {
+      document.body.style.overflow = '';
+    }
+    currentlySelectedModalId = null;
   };
 
   // Card click bindings
   foodCards.forEach(card => {
     card.addEventListener('click', (e) => {
-      // Exclude clicks on heart/share icons
-      if (e.target.closest('.card-action-btn')) {
+      // Exclude clicks on action buttons
+      if (e.target.closest('.card-action-btn') || e.target.closest('.btn-add-order')) {
         return;
       }
       openModal(card);
@@ -442,14 +456,161 @@ document.addEventListener('DOMContentLoaded', () => {
   modalCloseBtn.addEventListener('click', closeModal);
   modalBackdrop.addEventListener('click', closeModal);
 
-  // Close modal with ESC key
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeModal();
-      closeLightbox();
+  // --- 12. Interactive Cart Drawer & Checkout Operations ---
+  
+  // Render Cart Items
+  const renderCart = () => {
+    cartItemsList.innerHTML = '';
+    let total = 0;
+    let itemCount = 0;
+
+    if (cart.length === 0) {
+      cartItemsList.innerHTML = `
+        <div class="cart-empty-message">
+          <i class="fa-solid fa-bag-shopping"></i>
+          <p>Your order is empty.</p>
+          <p style="font-size: 0.75rem;">Add some delicacies from our menu!</p>
+        </div>
+      `;
+      btnCheckoutWhatsapp.style.pointerEvents = 'none';
+      btnCheckoutWhatsapp.style.opacity = '0.5';
+    } else {
+      btnCheckoutWhatsapp.style.pointerEvents = 'auto';
+      btnCheckoutWhatsapp.style.opacity = '1';
+
+      cart.forEach((item, index) => {
+        total += item.price * item.qty;
+        itemCount += item.qty;
+
+        const row = document.createElement('div');
+        row.className = 'cart-item-row';
+        row.innerHTML = `
+          <div class="cart-item-info">
+            <span class="cart-item-name">${item.name}</span>
+            <span class="cart-item-price">₹${item.price} × ${item.qty}</span>
+          </div>
+          <div class="cart-item-qty-controls">
+            <button class="qty-btn dec-qty-btn" data-index="${index}">-</button>
+            <span class="qty-val">${item.qty}</span>
+            <button class="qty-btn inc-qty-btn" data-index="${index}">+</button>
+          </div>
+        `;
+        cartItemsList.appendChild(row);
+      });
+    }
+
+    // Update prices & labels
+    cartSubtotalPrice.textContent = `₹${total}`;
+    cartCountBadge.textContent = `${itemCount} item${itemCount !== 1 ? 's' : ''}`;
+    localStorage.setItem('luxury-menu-cart', JSON.stringify(cart));
+
+    // Bind quantity increment/decrement controls
+    document.querySelectorAll('.dec-qty-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt(btn.getAttribute('data-index'));
+        if (cart[index].qty > 1) {
+          cart[index].qty--;
+        } else {
+          showToast(`Removed ${cart[index].name} from order`);
+          cart.splice(index, 1);
+        }
+        renderCart();
+      });
+    });
+
+    document.querySelectorAll('.inc-qty-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt(btn.getAttribute('data-index'));
+        cart[index].qty++;
+        renderCart();
+      });
+    });
+
+    // Compile WhatsApp Checkout Link
+    compileWhatsAppLink(total);
+  };
+
+  // Compile multi-item WhatsApp message
+  const compileWhatsAppLink = (total) => {
+    if (cart.length === 0) {
+      btnCheckoutWhatsapp.href = '';
+      return;
+    }
+
+    let message = `Hello! I would like to place an order from L'Ambrosia Modern Bistro:\n`;
+    message += `----------------------------------------\n`;
+    cart.forEach(item => {
+      message += `- *${item.qty}x* ${item.name} (₹${item.price * item.qty})\n`;
+    });
+    message += `----------------------------------------\n`;
+    message += `*Subtotal:* ₹${total}\n\n`;
+    message += `Please confirm my order. Thank you!`;
+
+    const encoded = encodeURIComponent(message);
+    btnCheckoutWhatsapp.href = `https://wa.me/${WHATSAPP_PHONE}?text=${encoded}`;
+  };
+
+  // Add Item to Cart
+  const addItemToCart = (id, name, price) => {
+    const existing = cart.find(item => item.id === id);
+    if (existing) {
+      existing.qty++;
+    } else {
+      cart.push({ id, name, price: parseInt(price), qty: 1 });
+    }
+    renderCart();
+    showToast(`Added ${name} to order`);
+    
+    // Auto-open cart drawer for instant visual confirmation
+    openCartDrawer();
+  };
+
+  // Click additions inside menu list rows
+  document.querySelectorAll('.btn-add-order').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Stop click from opening modal
+      const card = btn.closest('.food-card');
+      const id = card.getAttribute('data-id');
+      const name = card.getAttribute('data-name');
+      const price = card.getAttribute('data-price');
+      addItemToCart(id, name, price);
+    });
+  });
+
+  // Modal Add-to-cart button trigger
+  btnModalAddToCart.addEventListener('click', () => {
+    if (currentlySelectedModalId) {
+      const card = document.querySelector(`.food-card[data-id="${currentlySelectedModalId}"]`);
+      if (card) {
+        const name = card.getAttribute('data-name');
+        const price = card.getAttribute('data-price');
+        addItemToCart(currentlySelectedModalId, name, price);
+        closeModal();
+      }
     }
   });
 
+  // Cart Drawer open/close controls
+  const openCartDrawer = () => {
+    cartDrawer.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeCartDrawer = () => {
+    cartDrawer.classList.remove('active');
+    if (!detailModal.classList.contains('active') && !navMenu.classList.contains('active')) {
+      document.body.style.overflow = '';
+    }
+  };
+
+  cartToggleBtn.addEventListener('click', openCartDrawer);
+  cartCloseBtn.addEventListener('click', closeCartDrawer);
+  cartBackdrop.addEventListener('click', closeCartDrawer);
+
+  // Initialize Cart drawer state
+  renderCart();
+
+  // --- 13. Deep-Linking Hash Handler ---
   // Open modal if page URL contains dish hash (e.g. menu.html#dish-chicken-65)
   const handleUrlHash = () => {
     const hash = window.location.hash;
@@ -467,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Scroll to card first, then open modal
         setTimeout(() => {
-          const offset = 160;
+          const offset = 180;
           const pos = targetCard.getBoundingClientRect().top + window.scrollY - offset;
           window.scrollTo({ top: pos, behavior: 'smooth' });
           openModal(targetCard);
@@ -481,8 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Listen for hash changes
   window.addEventListener('hashchange', handleUrlHash);
 
-
-  // --- 12. Premium Lightbox Gallery ---
+  // --- 14. Premium Lightbox Gallery ---
   let activeGalleryIndex = 0;
   const galleryImageUrls = [];
   const galleryImageCaptions = [];
@@ -508,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const closeLightbox = () => {
     lightbox.classList.remove('active');
-    if (!detailModal.classList.contains('active')) {
+    if (!detailModal.classList.contains('active') && !cartDrawer.classList.contains('active')) {
       document.body.style.overflow = '';
     }
   };
@@ -541,6 +701,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Swipe Gestures or Keyboard for Lightbox
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      closeLightbox();
+      closeCartDrawer();
+    }
     if (!lightbox.classList.contains('active')) return;
     if (e.key === 'ArrowLeft') {
       navigateLightbox('prev');
